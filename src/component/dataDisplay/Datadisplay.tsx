@@ -23,7 +23,7 @@ function Datadisplay() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
-  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null); // NEW
 
   const dataFetch = useCallback(async () => {
     try {
@@ -32,7 +32,6 @@ function Datadisplay() {
         "https://fakestoreapi.com/products/"
       );
       setProducts(ecommerceData.data);
-  setSelectedProducts(ecommerceData.data);  // Initially, show all products
       setLoading(false);
       console.log("Data refreshed:", ecommerceData.data);
     } catch (error) {
@@ -41,21 +40,16 @@ function Datadisplay() {
     }
   }, []);
 
-  
-  // Filter products by category
-  const mensFilter = () => {
-    const filtered = products.filter((item) => item.category === "men's clothing");
-    setSelectedProducts(filtered);  // Show only men's products
-  };
+  // Filtered products based on selected category
+  const filteredProducts = useMemo(() => {
+    if (!selectedCategory) return products;
+    return products.filter((item) => item.category === selectedCategory);
+  }, [products, selectedCategory]);
 
-  const womensFilter = () => {
-    const filtered = products.filter((item) => item.category === "women's clothing");
-    setSelectedProducts(filtered);  // Show only women's products
-  };
-
-  const resetFilter = () => {
-    setSelectedProducts(products);  // Reset to show all products
-  };
+  // Handlers
+  const mensFilter = () => setSelectedCategory("men's clothing");
+  const womensFilter = () => setSelectedCategory("women's clothing");
+  const resetFilter = () => setSelectedCategory(null);
 
   useEffect(() => {
     dataFetch();
@@ -70,10 +64,8 @@ function Datadisplay() {
         Datadisplay
       </Typography>
 
-      
-
       <Grid container spacing={4} sx={gridContainerStyle}>
-        {selectedProducts.map((item) => (
+        {filteredProducts.map((item) => (
           <Grid item key={item.id} xs={12} sm={6} md={4} lg={3}>
             <Card sx={cardStyle}>
               <CardMedia
@@ -101,6 +93,7 @@ function Datadisplay() {
           </Grid>
         ))}
       </Grid>
+
       <div style={refreshBtnWrapperStyle}>
         <button onClick={mensFilter}>Mens</button>
         <button onClick={womensFilter}>Womens</button>
